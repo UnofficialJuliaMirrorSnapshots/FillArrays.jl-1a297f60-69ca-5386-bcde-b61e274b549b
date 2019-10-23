@@ -286,6 +286,12 @@ end
     end
 end
 
+@testset "==" begin
+    @test Zeros(5,4) == Fill(0,5,4)
+    @test Zeros(5,4) ≠ Zeros(3)
+    @test Ones(5,4) == Fill(1,5,4)
+end
+
 @testset "Rank" begin
     @test rank(Zeros(5,4)) == 0
     @test rank(Ones(5,4)) == 1
@@ -487,6 +493,8 @@ end
 
     rnge = range(-5.0, step=1.0, length=10)
     @test broadcast(*, Fill(5.0, 10), rnge) == broadcast(*, 5.0, rnge)
+    @test broadcast(*, Zeros(10, 10), rnge) == zeros(10, 10) 
+    @test broadcast(*, rnge, Zeros(10, 10)) == zeros(10, 10)
     @test_throws DimensionMismatch broadcast(*, Fill(5.0, 11), rnge)
     @test broadcast(*, rnge, Fill(5.0, 10)) == broadcast(*, rnge, 5.0)
     @test_throws DimensionMismatch broadcast(*, rnge, Fill(5.0, 11))
@@ -845,5 +853,24 @@ end
                 Fill(2.3,5), Fill([2.3,4.2],5), Fill(4)),
         p in (-Inf, 0, 0.1, 1, 2, 3, Inf)
         @test norm(a,p) ≈ norm(Array(a),p)
+    end
+end
+
+@testset "multiplication" begin
+    for T in (Float64, ComplexF64)
+        fv = T == Float64 ? Float64(1.6) : ComplexF64(1.6, 1.3)
+        n  = 10
+        k  = 12
+        m  = 15
+        fillvec = Fill(fv, k)
+        fillmat = Fill(fv, k, m)
+        A  = rand(ComplexF64, n, k)
+        @test A*fillvec ≈ A*Array(fillvec)
+        @test A*fillmat ≈ A*Array(fillmat)
+        A  = rand(ComplexF64, k, n)
+        @test transpose(A)*fillvec ≈ transpose(A)*Array(fillvec)
+        @test transpose(A)*fillmat ≈ transpose(A)*Array(fillmat)
+        @test adjoint(A)*fillvec ≈ adjoint(A)*Array(fillvec)
+        @test adjoint(A)*fillmat ≈ adjoint(A)*Array(fillmat)
     end
 end
